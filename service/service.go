@@ -187,7 +187,7 @@ func store(baseDir string, oid string, size int64, a *api.Action, fromPath strin
 		}
 	}
 
-	err = os.MkdirAll(filepath.Dir(destPath), 0755)
+	err = os.MkdirAll(filepath.Dir(destPath), 0777)
 	if err != nil {
 		api.SendTransferError(oid, 14, fmt.Sprintf("Cannot create dir %q: %v", filepath.Dir(destPath), err), writer, errWriter)
 		return
@@ -204,7 +204,7 @@ func store(baseDir string, oid string, size int64, a *api.Action, fromPath strin
 		}
 	}
 
-	srcf, err := os.OpenFile(fromPath, os.O_RDONLY, 0644)
+	srcf, err := os.OpenFile(fromPath, os.O_RDONLY, 0666)
 	if err != nil {
 		api.SendTransferError(oid, 15, fmt.Sprintf("Cannot read data from %q: %v", fromPath, err), writer, errWriter)
 		return
