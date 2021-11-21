@@ -92,14 +92,14 @@ func retrieve(baseDir, gitDir, oid string, size int64, a *api.Action, writer, er
 	// Copy to temp, since LFS will rename this to final location
 	// Use git dir as base to ensure final path is on same drive for LFS move
 	dlfilename := downloadTempPath(gitDir, oid)
-	dlFile, err := os.OpenFile(dlfilename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	dlFile, err := os.OpenFile(dlfilename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		api.SendTransferError(oid, 5, fmt.Sprintf("Error creating temp file for %q: %v", filePath, err), writer, errWriter)
 		return
 	}
 	defer dlFile.Close()
 
-	f, err := os.OpenFile(filePath, os.O_RDONLY, 0644)
+	f, err := os.OpenFile(filePath, os.O_RDONLY, 0)
 	if err != nil {
 		api.SendTransferError(oid, 6, fmt.Sprintf("Cannot read data from %q: %v", filePath, err), writer, errWriter)
 		os.Remove(dlfilename)
@@ -204,14 +204,14 @@ func store(baseDir string, oid string, size int64, a *api.Action, fromPath strin
 		}
 	}
 
-	srcf, err := os.OpenFile(fromPath, os.O_RDONLY, 0666)
+	srcf, err := os.OpenFile(fromPath, os.O_RDONLY, 0)
 	if err != nil {
 		api.SendTransferError(oid, 15, fmt.Sprintf("Cannot read data from %q: %v", fromPath, err), writer, errWriter)
 		return
 	}
 	defer srcf.Close()
 
-	dstf, err := os.OpenFile(tempPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, statFrom.Mode())
+	dstf, err := os.OpenFile(tempPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
 	if err != nil {
 		api.SendTransferError(oid, 16, fmt.Sprintf("Cannot open temp file for writing %q: %v", tempPath, err), writer, errWriter)
 		return
