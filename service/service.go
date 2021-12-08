@@ -60,8 +60,14 @@ func Serve(baseDir string, stdin io.Reader, stdout, stderr io.Writer) {
 
 func storagePath(baseDir string, oid string) string {
 	// Use same folder split as lfs itself
+	
 	fld := filepath.Join(baseDir, oid[0:2], oid[2:4])
-	return filepath.Join(fld, oid)
+	destPath := filepath.Join(fld, oid)
+	os.MkdirAll(filepath.Dir(destPath), 0777)
+	os.Chmod(baseDir, 0777)
+	os.Chmod(fld, 0777)
+	os.Chmod(filepath.Dir(destPath), 0777)
+	return destPath
 }
 
 func downloadTempPath(gitDir string, oid string) string {
