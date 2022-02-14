@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -58,22 +59,12 @@ func Serve(baseDir string, stdin io.Reader, stdout, stderr io.Writer) {
 
 }
 
-func ChmodR(path string) error {
-    return filepath.Walk(path, func(name string, info os.FileInfo, err error) error {
-        if err == nil {
-            err = os.Chmod(name, 0777)
-        }
-        return err
-    })
-}
-
 func storagePath(baseDir string, oid string) string {
 	// Use same folder split as lfs itself
 	
 	fld := filepath.Join(baseDir, oid[0:2], oid[2:4])
 	destPath := filepath.Join(fld, oid)
 	os.MkdirAll(filepath.Dir(destPath), 0777)
-	ChmodR(destPath)
 	return destPath
 }
 
@@ -92,6 +83,28 @@ func retrieve(baseDir, gitDir, oid string, size int64, a *api.Action, writer, er
 	// If user wants to separate, can just use a different folder
 	filePath := storagePath(baseDir, oid)
 	stat, err := os.Stat(filePath)
+	
+	if err != nil {
+		app := "ls"
+		arg0 := filepath.Join(baseDir, oid[0:2])
+		cmd := exec.Command(app, arg0)
+		stdout, myerr := cmd.Output()
+		if myerr != nil {
+			api.SendTransferError(oid, 3, fmt.Sprintf("1 ls %q: %v [%s]", arg0, myerr.Error(), stdout), writer, errWriter)
+			return
+		}
+		arg0 = filepath.Join(baseDir, oid[0:2], oid[2:4])
+		cmd = exec.Command(app, arg0)
+		stdout, myerr = cmd.Output()
+		if myerr != nil {
+			api.SendTransferError(oid, 3, fmt.Sprintf("1 ls %q: %v [%s]", arg0, myerr.Error(), stdout), writer, errWriter)
+			return
+		}
+
+		filePath = storagePath(baseDir, oid)
+		stat, err = os.Stat(filePath)
+	}
+	
 	if err != nil {
 		api.SendTransferError(oid, 3, fmt.Sprintf("Cannot stat %q: %v", filePath, err), writer, errWriter)
 		return
